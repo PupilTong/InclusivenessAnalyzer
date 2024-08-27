@@ -12991,9 +12991,9 @@ function checkFileForTerms(file, expression, terms, maxLineLength) {
             } else {
                 var matches = line.matchAll(r);
                 if(matches) {
-                    passed = false;
 
                     for (const match of matches) {
+                        passed = false;
                         var termFound = match[0].trim();
                         
                         // get alternatives (need to normalize the match to remove the spaces and aditional chars)
@@ -13295,6 +13295,14 @@ module.exports = require("net");
 
 /***/ }),
 
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
+
+/***/ }),
+
 /***/ 2037:
 /***/ ((module) => {
 
@@ -13424,6 +13432,7 @@ module.exports = JSON.parse('[{"term":"whitelist","regex":"white[\\\\s_-]?list",
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+const path = __nccwpck_require__(9411);
 const nonInclusiveTerms = __nccwpck_require__(3778);
 const readFiles = __nccwpck_require__(853);
 //const checkFileForPhrase = require("./file-content");
@@ -13455,28 +13464,34 @@ async function run() {
       logger.info(`- Excluding file patterns : ${excludeFilesList}`);
     }
 
-    // `excludeUnchangedFiles` input defined in action metadata file
-    const excludeUnchangedFilesParam = params.readBoolean('excludeUnchangedFiles');
 
-    var passed = true;
+    let passed = true;
 
     const dir = platform.getWorkingDirectory();
 
     const list = await nonInclusiveTerms.getNonInclusiveTerms();
 
     var filenames = []
-    if (excludeUnchangedFilesParam) {
-      logger.info("- Scanning files added or modified in last commit");
-      filenames = readFiles.getFilesFromLastCommit(dir, excludeFilesList);
-    } else { 
-      logger.info("- Scanning all files in directory");
-      filenames = readFiles.getFilesFromDirectory(dir, excludeFilesList);
+    const include = params.read('include');
+    if (include) {
+      logger.info(`got include params: ${include}`)
+      filenames = include.split();
+    } else {
+      // `excludeUnchangedFiles` input defined in action metadata file
+      const excludeUnchangedFilesParam = params.readBoolean('excludeUnchangedFiles');
+      if (excludeUnchangedFilesParam) {
+        logger.info("- Scanning files added or modified in last commit");
+        filenames = readFiles.getFilesFromLastCommit(dir, excludeFilesList);
+      } else { 
+        logger.info("- Scanning all files in directory");
+        filenames = readFiles.getFilesFromDirectory(dir, excludeFilesList);
+      }
     }
 
     const maxLineLength = parseInt(params.read("maxLineLength"));
 
     filenames.forEach(filename => {
-      logger.debug(`Scanning file: ${filename}`);
+      logger.debug(`Scanning file: ${path.join(dir, filename)}`);
       //core.startGroup(`Scanning file: ${filename}`);
 
 /*       nonInclusiveTerms.forEach(phrase => {
@@ -13499,13 +13514,13 @@ async function run() {
           core.debug(`Skipping the term '${phrase.term}'`);
       }); */
 
-      passed = checkFileForTerms(filename, nonInclusiveTerms.getTermsRegex(excludeTermsList), list, maxLineLength);
+      passed &&= checkFileForTerms(path.join(dir, filename), nonInclusiveTerms.getTermsRegex(excludeTermsList), list, maxLineLength);
 
       //core.endGroup();
     });
 
     if (!passed){
-      platform.logBuildFailure("Found non inclusive terms in some files.");
+      platform.logBuildFailure();
     } 
 
   } catch (error) {
