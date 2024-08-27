@@ -21,9 +21,9 @@ function checkFileForTerms(file, expression, terms, maxLineLength) {
             } else {
                 var matches = line.matchAll(r);
                 if(matches) {
-                    passed = false;
 
                     for (const match of matches) {
+                        passed = false;
                         var termFound = match[0].trim();
                         
                         // get alternatives (need to normalize the match to remove the spaces and aditional chars)
