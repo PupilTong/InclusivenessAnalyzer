@@ -56,6 +56,7 @@ Use the options below to configure exclusions and build state when non-inclusive
 | `excludeFiles   `        | `**/skipme.txt,**/donotscan/*` | Comma separated list of file patterns to exclude from analysis. [Glob patterns](https://github.com/isaacs/node-glob#glob-primer) are supported with a prefix of `**/` |
 | `excludeTerms`           | `he,she`                       | Comma separated list of non-inclusive terms to exclude from analysis. |
 | `maxLineLength`          | 2000                           | Maximum line length to inspect. Defaults to 1000. |
+| `include`                | `path/to/file.txt`                   | Skip the `excludeUnchangedFiles` and the `excludeFiles`, use the given file list |
 
 ## Inclusiveness Analyzer for other Platforms
 

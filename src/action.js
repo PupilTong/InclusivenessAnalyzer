@@ -1,3 +1,4 @@
+const path = require('node:path');
 const nonInclusiveTerms = require("./non-inclusive-terms");
 const readFiles = require("./read-files");
 //const checkFileForPhrase = require("./file-content");
@@ -29,8 +30,6 @@ async function run() {
       logger.info(`- Excluding file patterns : ${excludeFilesList}`);
     }
 
-    // `excludeUnchangedFiles` input defined in action metadata file
-    const excludeUnchangedFilesParam = params.readBoolean('excludeUnchangedFiles');
 
     var passed = true;
 
@@ -39,12 +38,20 @@ async function run() {
     const list = await nonInclusiveTerms.getNonInclusiveTerms();
 
     var filenames = []
-    if (excludeUnchangedFilesParam) {
-      logger.info("- Scanning files added or modified in last commit");
-      filenames = readFiles.getFilesFromLastCommit(dir, excludeFilesList);
-    } else { 
-      logger.info("- Scanning all files in directory");
-      filenames = readFiles.getFilesFromDirectory(dir, excludeFilesList);
+    const include = params.read('include');
+    if (include) {
+      logger.info(`got include params: ${include}`)
+      filenames = include.split();
+    } else {
+      // `excludeUnchangedFiles` input defined in action metadata file
+      const excludeUnchangedFilesParam = params.readBoolean('excludeUnchangedFiles');
+      if (excludeUnchangedFilesParam) {
+        logger.info("- Scanning files added or modified in last commit");
+        filenames = readFiles.getFilesFromLastCommit(dir, excludeFilesList);
+      } else { 
+        logger.info("- Scanning all files in directory");
+        filenames = readFiles.getFilesFromDirectory(dir, excludeFilesList);
+      }
     }
 
     const maxLineLength = parseInt(params.read("maxLineLength"));
@@ -73,7 +80,7 @@ async function run() {
           core.debug(`Skipping the term '${phrase.term}'`);
       }); */
 
-      passed = checkFileForTerms(filename, nonInclusiveTerms.getTermsRegex(excludeTermsList), list, maxLineLength);
+      passed = checkFileForTerms(path.join(dir, filename), nonInclusiveTerms.getTermsRegex(excludeTermsList), list, maxLineLength);
 
       //core.endGroup();
     });
