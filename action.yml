@@ -19,6 +19,10 @@ inputs:
     description: 'Maximum line length to scan'
     required: false
     default: '1000'
+  include:
+    description: 'Override the file list'
+    required: false
+    default: ''
 runs:
   using: 'node16'
   main: 'dist/index.js'
