@@ -1,4 +1,4 @@
-name: 'Inclusiveness Analyzer'
+name: pupiltong/forked_ms_Inclusiveness_Analyzer
 description: 'This GitHub action scans your repository for non-inclusive terms and provide alternative suggestions.'
 inputs:
   failOnNonInclusiveTerm:
